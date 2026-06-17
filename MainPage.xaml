@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage  xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+              x:Class="TaroziAPP.MainPage"
+              >
+
+    <!-- Gradient background -->
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#2E3192" Offset="0"/>
+                <GradientStop Color="#1BFFFF" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <ScrollView Padding="0">
+           
+
+
+                <!-- Home Page Grid -->
+                <Grid x:Name="HomeGrid"  IsVisible="True" RowSpacing="50">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0"
+                            x:Name="HeaderFrame"
+                            BackgroundColor="#2E3192"
+                            Padding="24"
+                            StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="0"/>
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Opacity="0.2" Offset="2,2" Radius="4"/>
+                        </Border.Shadow>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                <Label Text="⚖️ Tarozi Klass" 
+                                       FontSize="22" 
+                                       FontAttributes="Bold"
+                                       TextColor="White"
+                                       HorizontalOptions="Start">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer NumberOfTapsRequired="1" 
+                                                              Tapped="OnHeaderLongPressed"/>
+                                    </Label.GestureRecognizers>
+                                </Label>
+                                <StackLayout Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalOptions="End" VerticalOptions="Center">
+                                    <Label x:Name="PhoneNumberLabel"
+                                           Text="+998 90 123 45 67" 
+                                           HorizontalOptions="End"
+                                           VerticalOptions="Center"
+                                           TextColor="White" 
+                                           FontSize="16"/>
+                                </StackLayout>
+                            </Grid>
+
+                            <!-- DeviceId/Name Row -->
+
+                            <StackLayout Grid.Row="1" Orientation="Horizontal" Spacing="10" HorizontalOptions="FillAndExpand">
+                                <Border StrokeThickness="0" Padding="10,4" HorizontalOptions="Start">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="12"/>
+                                    </Border.StrokeShape>
+                                    <Label x:Name="DeviceNameLabel"
+                                           Text="" 
+                                           FontSize="15" 
+                                           TextColor="White"/>
+                                </Border>
+                                <Border StrokeThickness="0" Padding="10,4" HorizontalOptions="EndAndExpand">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="12"/>
+                                    </Border.StrokeShape>
+                                    <Label x:Name="DeviceIdLabel"
+                                           Text="ID: eb4d980a-87b2-41d0-8cd0-a950b27d6b2c" 
+                                           FontSize="15" 
+                                           TextColor="White"
+                                           HorizontalOptions="End"/>
+                                </Border>
+                            </StackLayout>
+                        </Grid>
+                    </Border>
+
+                    <!-- Main Content -->
+                    <StackLayout Grid.Row="1" Spacing="20" Padding="0">
+
+                        <!-- Payment Cards Grid -->
+                        <Grid Padding="8" HeightRequest="260">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Paycom Card -->
+                            <Border x:Name="PaycomCard" Grid.Column="0" BackgroundColor="#ffffffee" Padding="0" StrokeThickness="0" Margin="8,0" IsVisible="False">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="22"/>
+                                </Border.StrokeShape>
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Opacity="0.2" Offset="2,2" Radius="4"/>
+                                </Border.Shadow>
+                                <Grid RowDefinitions="*,Auto">
+                                    <Image x:Name="PaycomImage" Aspect="AspectFit" HeightRequest="140"/>
+                                    <Border BackgroundColor="#00000040" Padding="0" StrokeThickness="0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="22"/>
+                                        </Border.StrokeShape>
+                                        <Button Text="" BackgroundColor="Transparent" CommandParameter="Paycom" Clicked="OnPaymentCardClicked"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- Click Card -->
+                            <Border x:Name="ClickCard" Grid.Column="1" BackgroundColor="#ffffffee" Padding="0" StrokeThickness="0" Margin="8,0" IsVisible="False">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="22"/>
+                                </Border.StrokeShape>
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Opacity="0.2" Offset="2,2" Radius="4"/>
+                                </Border.Shadow>
+                                <Grid RowDefinitions="*,Auto">
+                                    <Image x:Name="ClickImage" Aspect="AspectFill" HeightRequest="140"/>
+                                    <Border BackgroundColor="#00000040" Padding="0" StrokeThickness="0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="22"/>
+                                        </Border.StrokeShape>
+                                        <Button Text="" BackgroundColor="Transparent" CommandParameter="Click" Clicked="OnPaymentCardClicked"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- Uzum Card -->
+                            <Border x:Name="UzumCard" Grid.Column="2" BackgroundColor="#ffffffee" Padding="0" StrokeThickness="0" Margin="8,0" IsVisible="False">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="22"/>
+                                </Border.StrokeShape>
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Opacity="0.2" Offset="2,2" Radius="4"/>
+                                </Border.Shadow>
+                                <Grid RowDefinitions="*,Auto">
+                                    <Image x:Name="UzumImage" Aspect="AspectFill" HeightRequest="140"/>
+                                    <Border BackgroundColor="#00000040" Padding="0" StrokeThickness="0">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="22"/>
+                                        </Border.StrokeShape>
+                                        <Button Text="" BackgroundColor="Transparent" CommandParameter="Uzum" Clicked="OnPaymentCardClicked"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- Mashina davlat raqami - ekran markazi -->
+                        <Border Margin="24,0"
+                                BackgroundColor="White"
+                                StrokeThickness="2"
+                                Stroke="#E0E0E0"
+                                Padding="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="20"/>
+                            </Border.StrokeShape>
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Opacity="0.15" Offset="0,4" Radius="8"/>
+                            </Border.Shadow>
+                            <StackLayout Padding="16,12" Spacing="4">
+                                <Label Text="🚗 Mashina davlat raqami"
+                                       FontSize="13"
+                                       TextColor="#666666"
+                                       HorizontalOptions="Center"
+                                       FontAttributes="Bold"/>
+                                <Entry x:Name="CarNumberEntry"
+                                       Placeholder="60M139WA"
+                                       PlaceholderColor="#BDBDBD"
+                                       TextColor="Black"
+                                       FontSize="28"
+                                       FontAttributes="Bold"
+                                       BackgroundColor="Transparent"
+                                       MaxLength="10"
+                                       TextChanged="OnCarNumberChanged"
+                                       HorizontalTextAlignment="Center"
+                                       HorizontalOptions="Fill"/>
+                            </StackLayout>
+                        </Border>
+                    </StackLayout>
+
+                    <!-- Payment Summary -->
+                    <Border Grid.Row="2" BackgroundColor="#ffffffee"   Padding="0" StrokeThickness="0" Margin="8,16,8,24">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="24"/>
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Opacity="0.2" Offset="2,2" Radius="4"/>
+                        </Border.Shadow>
+                        <StackLayout Spacing="0" VerticalOptions="End">
+                            <BoxView BackgroundColor="#E0EAFF" HeightRequest="2"/>
+                            <StackLayout VerticalOptions="End" Padding="20,16" Spacing="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Label Grid.Column="0" x:Name="ShouldPayLabel" Text="To‘lanishi kerak: 50,000 so‘m" FontSize="22" FontAttributes="Bold" TextColor="#1A237E"/>
+                                    <Label Grid.Column="1" x:Name="BankBalanceLabel" Text="To‘landi: 0 so‘m" FontSize="16" FontAttributes="Bold" TextColor="#37474F"/>
+                                </Grid>
+                                <Label Text="Oxirgi tranzaksiya ma'lumotlari real vaqt rejimida yangilanadi." TextColor="#607D8B" FontSize="13" LineBreakMode="WordWrap"/>
+                            </StackLayout>
+                            <StackLayout Padding="20,12,20,24">
+                                <Button x:Name="ConfirmButton" Text="Tasdiqlash" BackgroundColor="#2E3192" TextColor="White" FontSize="18" FontAttributes="Bold" HeightRequest="56" IsEnabled="False" Clicked="OnConfirmPayment"/>
+                            </StackLayout>
+                        </StackLayout>
+                    </Border>
+                </Grid>
+           
+        </ScrollView>
+    </Grid>
+</ContentPage>

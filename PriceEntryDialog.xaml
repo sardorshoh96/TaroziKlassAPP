@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TaroziAPP.PriceEntryDialog"
+             Title=""
+             BackgroundColor="#80000000">
+
+    <Grid>
+        <!-- Dialog Background -->
+        <Frame BackgroundColor="White" 
+               CornerRadius="20" 
+               Padding="32"
+               HasShadow="True"
+               Margin="32"
+               VerticalOptions="Center"
+               HorizontalOptions="Center"
+               MaximumWidthRequest="500">
+            
+            <StackLayout Spacing="20">
+                
+                <!-- Header -->
+                <Grid>
+                    <Label x:Name="HeaderLabel"
+                           Text="Yangi narx qo'shish" 
+                           FontSize="20" 
+                           FontAttributes="Bold"
+                           TextColor="#333"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                    <Button Text="✕" 
+                            BackgroundColor="Transparent"
+                            TextColor="#999"
+                            FontSize="24"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            Clicked="OnCancelClicked"/>
+                </Grid>
+
+                <!-- Weight Input -->
+                <StackLayout Spacing="8">
+                    <Label Text="Vazn (kg):" 
+                           FontSize="16" 
+                           FontAttributes="Bold"
+                           TextColor="#333"/>
+                    <Entry x:Name="WeightEntry"
+                           Placeholder="Masalan: 1.0"
+                           Keyboard="Numeric"
+                           FontSize="16"
+                           TextColor="#333"
+                           BackgroundColor="#f8f9fa"
+                           PlaceholderColor="#999"/>
+                    <Label x:Name="WeightErrorLabel"
+                           Text=""
+                           FontSize="12"
+                           TextColor="#dc3545"
+                           IsVisible="False"/>
+                </StackLayout>
+
+                <!-- Price Input -->
+                <StackLayout Spacing="8">
+                    <Label Text="Narx (so'm):" 
+                           FontSize="16" 
+                           FontAttributes="Bold"
+                           TextColor="#333"/>
+                    <Entry x:Name="PriceEntry"
+                           Placeholder="Masalan: 15000"
+                           Keyboard="Numeric"
+                           FontSize="16"
+                           TextColor="#333"
+                           BackgroundColor="#f8f9fa"
+                           PlaceholderColor="#999"/>
+                    <Label x:Name="PriceErrorLabel"
+                           Text=""
+                           FontSize="12"
+                           TextColor="#dc3545"
+                           IsVisible="False"/>
+                </StackLayout>
+
+                <!-- Buttons -->
+                <Grid ColumnSpacing="15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <Button Grid.Column="0"
+                            Text="Bekor qilish"
+                            BackgroundColor="#6c757d"
+                            TextColor="White"
+                            FontSize="16"
+                            CornerRadius="10"
+                            HeightRequest="50"
+                            Clicked="OnCancelClicked"/>
+                    
+                    <Button Grid.Column="1"
+                            x:Name="SaveButton"
+                            Text="Saqlash"
+                            BackgroundColor="#28a745"
+                            TextColor="White"
+                            FontSize="16"
+                            CornerRadius="10"
+                            HeightRequest="50"
+                            Clicked="OnSaveClicked"/>
+                </Grid>
+                
+            </StackLayout>
+        </Frame>
+    </Grid>
+
+</ContentPage>
+

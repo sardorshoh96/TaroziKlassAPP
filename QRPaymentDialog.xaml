@@ -1,0 +1,109 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+
+             x:Class="TaroziAPP.QRPaymentDialog"
+             Title=""
+             BackgroundColor="#80000000">
+
+    <Grid>
+        <!-- Dialog Background (Dark) -->
+        <Frame BackgroundColor="White" 
+               CornerRadius="20" 
+               Padding="32"
+               HasShadow="True"
+               Margin="32"
+               VerticalOptions="Center"
+               BorderColor="#444">
+            
+            <StackLayout Spacing="20">
+                
+                <!-- Header -->
+                <Grid>
+                    <Label x:Name="HeaderLabel"
+                           Text="To'lov turi: Paycom" 
+                           FontSize="20" 
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+                    <Button Text="✕" 
+                            BackgroundColor="Transparent"
+                            TextColor="White"
+                            FontSize="24"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            Clicked="OnCloseClicked"/>
+                </Grid>
+
+                <!-- QR Code Display (Simple Grid) -->
+                <Grid WidthRequest="250"
+                      HeightRequest="250"
+                      HorizontalOptions="Center">
+                    
+                    <!-- QR Code Image -->
+                    <Image x:Name="QRCodeImage"
+                           WidthRequest="250"
+                           HeightRequest="250"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Aspect="AspectFit"
+                           BackgroundColor="White"/>
+                           
+                    <!-- Loading Indicator Overlay -->
+                    <Grid x:Name="LoadingGrid" IsVisible="True">
+                        <Frame BackgroundColor="#80000000" 
+                               CornerRadius="12" 
+                               Padding="0"/>
+                        <ActivityIndicator x:Name="LoadingIndicator"
+                                           IsRunning="True"
+                                           Color="White"
+                                           WidthRequest="40"
+                                           HeightRequest="40"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"/>
+                    </Grid>
+                </Grid>
+
+                <!-- Instructions -->
+                <Label Text="To'lovni amalga oshirish uchun ilova orqali QR kodni skanerlang"
+                       FontSize="16"
+                       TextColor="#cccccc"
+                       HorizontalTextAlignment="Center"/>
+
+                <!-- Amount -->
+                <StackLayout Orientation="Horizontal" 
+                             HorizontalOptions="Center" 
+                             Spacing="5">
+                    <Label Text="Jami summa:" 
+                           FontSize="18" 
+                           TextColor="White"/>
+                    <Label x:Name="AmountLabel"
+                           Text="50,000 so'm" 
+                           FontSize="18" 
+                           FontAttributes="Bold"
+                           TextColor="#4da6ff"/>
+                </StackLayout>
+
+                <!-- Timer -->
+                <Label x:Name="TimerLabel"
+                       Text="To'lov qilish uchun qolgan taxminiy vaqt: 02:00"
+                       FontSize="14"
+                       TextColor="#999999"
+                       HorizontalTextAlignment="Center"/>
+
+                <!-- Status Messages -->
+                <Label x:Name="StatusLabel"
+                       Text=""
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="#4caf50"
+                       HorizontalTextAlignment="Center"
+                       IsVisible="False"/>
+                
+            </StackLayout>
+        </Frame>
+    </Grid>
+
+</ContentPage>

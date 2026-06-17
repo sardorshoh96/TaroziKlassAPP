@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TaroziAPP.AdvancedSettingsDialog"
+             BackgroundColor="#BF000000"
+             Padding="0">
+
+    <Grid>
+        <Frame Margin="24"
+               Padding="24"
+               BackgroundColor="White"
+               CornerRadius="24"
+               HasShadow="True"
+               VerticalOptions="Center">
+            <StackLayout Spacing="20">
+                <StackLayout Spacing="6">
+                    <Label Text="Advanced sozlamalar"
+                           FontSize="22"
+                           FontAttributes="Bold"
+                           TextColor="#1A237E"
+                           HorizontalOptions="Center" />
+                    <Label Text="Port rejimi va qurilma turini tanlang."
+                           FontSize="14"
+                           TextColor="#607D8B"
+                           HorizontalOptions="Center"
+                           LineBreakMode="WordWrap" />
+                </StackLayout>
+
+                <StackLayout Spacing="10">
+                    <Label Text="Port rejimi"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#1A237E" />
+                    <Picker x:Name="PortModePicker"
+                            Title="Port rejimini tanlang">
+                        <Picker.Items>
+                            <x:String>RS485</x:String>
+                            <x:String>RS232</x:String>
+                            <x:String>Ethernet</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </StackLayout>
+
+                <StackLayout Spacing="10">
+                    <Label Text="Qurilma turi"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#1A237E" />
+                    <Picker x:Name="DeviceTypePicker"
+                            Title="Qurilma turini tanlang">
+                        <Picker.Items>
+                            <x:String>Standart</x:String>
+                            <x:String>A12E</x:String>
+                            <x:String>XK3118T1</x:String>
+                            <x:String>HPM-D</x:String>
+                            <x:String>TITAN H12</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </StackLayout>
+
+                <StackLayout Spacing="10">
+                    <Label Text="Printer turi"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#1A237E" />
+                    <Picker x:Name="PrinterTypePicker"
+                            Title="Printer turini tanlang">
+                        <Picker.Items>
+                            <x:String>TG2480H</x:String>
+                            <x:String>Cashino KP-302</x:String>
+                            <x:String>701</x:String>
+                            <x:String>Xprinter (USB)</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </StackLayout>
+
+                <Grid ColumnDefinitions="*,*"
+                      ColumnSpacing="16">
+                    <Button Text="Bekor qilish"
+                            BackgroundColor="#ECEFF1"
+                            TextColor="#37474F"
+                            FontAttributes="Bold"
+                            CornerRadius="14"
+                            HeightRequest="48"
+                            Clicked="OnCancelClicked"/>
+                    <Button Grid.Column="1"
+                            Text="Saqlash"
+                            BackgroundColor="#2E3192"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            CornerRadius="14"
+                            HeightRequest="48"
+                            Clicked="OnSaveClicked"/>
+                </Grid>
+            </StackLayout>
+        </Frame>
+    </Grid>
+
+</ContentPage>
+

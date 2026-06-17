@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TaroziAPP.LoginPage"
+             Shell.NavBarIsVisible="False">
+
+    <Grid>
+        <!-- Gradient Background -->
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#2E3192" Offset="0"/>
+                <GradientStop Color="#1BFFFF" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <ScrollView>
+            <VerticalStackLayout
+                Padding="0"
+                VerticalOptions="Center">
+
+                <Frame
+                    BackgroundColor="White"
+                    CornerRadius="20"
+                    Padding="24"
+                    HasShadow="True">
+
+                    <StackLayout Spacing="18">
+
+                        <!-- Error Label -->
+                        <Label x:Name="ErrorLabel"
+                               Text=""
+                               IsVisible="False"
+                               TextColor="Red"
+                               FontSize="14"/>
+
+                        <!-- Username -->
+                        <StackLayout Spacing="8">
+                            <Label Text="👤 Foydalanuvchi nomi"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#37474F"/>
+
+                            <Border Stroke="#E0E7FF"
+                                    StrokeThickness="1"
+                                    Background="#F5F7FF">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="14"/>
+                                </Border.StrokeShape>
+
+                                <Entry x:Name="UsernameEntry"
+                                       Placeholder="Login kiriting"
+                                       BackgroundColor="Transparent"
+                                       FontSize="16"
+                                       HeightRequest="52"/>
+                            </Border>
+                        </StackLayout>
+
+                        <!-- Password -->
+                        <StackLayout Spacing="8">
+                            <Label Text="🔒 Parol"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="#37474F"/>
+
+                            <Border Stroke="#E0E7FF"
+                                    StrokeThickness="1"
+                                    Background="#F5F7FF">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="14"/>
+                                </Border.StrokeShape>
+
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Entry x:Name="PasswordEntry"
+                                           Placeholder="Parol kiriting"
+                                           IsPassword="True"
+                                           BackgroundColor="Transparent"
+                                           HeightRequest="52"/>
+
+                                    <Button x:Name="PasswordVisibilityButton"
+                                            Text="👁️"
+                                            BackgroundColor="Transparent"
+                                            WidthRequest="50"
+                                            Clicked="OnPasswordVisibilityToggled"/>
+                                </Grid>
+                            </Border>
+                        </StackLayout>
+
+                        <Button x:Name="LoginButton"
+                                Text="🔑 Tizimga kirish"
+                                HeightRequest="54"
+                                BackgroundColor="#2E3192"
+                                TextColor="White"
+                                CornerRadius="14"
+                                Clicked="OnLoginClicked"/>
+
+                    </StackLayout>
+                </Frame>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>

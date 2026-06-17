@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- App ichki papkasidan APK ulashish -->
+    <cache-path name="apk_cache" path="updates/" />
+    <files-path name="apk_files" path="updates/" />
+    <external-cache-path name="apk_external_cache" path="updates/" />
+</paths>

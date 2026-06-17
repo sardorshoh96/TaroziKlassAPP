@@ -1,0 +1,172 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net10.0-android</TargetFrameworks>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>TaroziAPP</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<!-- Display name -->
+		<ApplicationTitle>Tarozi Klass</ApplicationTitle>
+
+		<!-- App Identifier -->
+		<ApplicationId>uz.taroziklass</ApplicationId>
+
+		<!-- Versions -->
+		<ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+		<ApplicationVersion>2</ApplicationVersion>
+
+		<!-- Android specific configuration -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+		
+		<!-- JDK Configuration - Required for Android builds -->
+		<!-- .NET MAUI requires JDK 21.0 for Android builds -->
+		<!-- If JDK 21 is installed, uncomment and update the path below with the correct version number -->
+		<!-- Example: <JavaSdkDirectory Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">C:\Program Files\Microsoft\jdk-21.0.1-hotspot</JavaSdkDirectory> -->
+	</PropertyGroup>
+	
+	<!-- Android Configuration - ARM64 only -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<!-- Faqat ARM64-v8a protsessorli device'lar uchun -->
+		<RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
+		<!-- Bitta ABI uchun bitta APK -->
+		<AndroidCreatePackagePerAbi>false</AndroidCreatePackagePerAbi>
+	</PropertyGroup>
+	
+	<!-- Release Build Configuration - Maksimal optimizatsiya -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<!-- AOT Compilation - Hybrid mode (AOT + JIT) for compatibility -->
+		<!-- Full AOT causes JIT compilation errors with Marshal.PtrToStructure -->
+		<AndroidEnableAssemblyILStripping>true</AndroidEnableAssemblyILStripping>
+		<AndroidAotMode>Hybrid</AndroidAotMode>
+		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+		
+		<!-- Package format: APK for direct install (Play Store emas) -->
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+		
+		<!-- Code shrinking - SdkOnly saqlaydi user assembly'larni (SocketIO uchun kerak) -->
+		<AndroidLinkMode>SdkOnly</AndroidLinkMode>
+		<AndroidLinkTool>r8</AndroidLinkTool>
+		<AndroidLinkResources>true</AndroidLinkResources>
+		
+		<!-- Enable debug symbols in release for debugging runtime issues -->
+		<AndroidIncludeDebugSymbols>true</AndroidIncludeDebugSymbols>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>portable</DebugType>
+		
+		<!-- Enable code obfuscation -->
+		<AndroidEnableProguard>true</AndroidEnableProguard>
+		
+		<!-- Resource shrinking - removes unused resources -->
+		<AndroidResgenExtraArgs>--no-version-vectors</AndroidResgenExtraArgs>
+		
+		<!-- Designer assemblies kerak (MAUI talab qiladi) -->
+		<AndroidUseDesignerAssembly>true</AndroidUseDesignerAssembly>
+		
+		<!-- Optimize assemblies -->
+		<DebugType>none</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
+	
+	<!-- Android Signing Configuration - Release APK har doim bir xil imzo -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<AndroidSigningKeyStore>keystore\tarozi-release.jks</AndroidSigningKeyStore>
+		<AndroidSigningKeyAlias>tarozi</AndroidSigningKeyAlias>
+		<AndroidSigningKeyPass>tarozi2024</AndroidSigningKeyPass>
+		<AndroidSigningStorePass>tarozi2024</AndroidSigningStorePass>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-android|AnyCPU'">
+	  <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- App Icon -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+
+		<!-- Images - faqat kerakli rasmlar -->
+		<!-- dotnet_bot.png o'chirildi - ishlatilmayapti -->
+		<!-- <MauiImage Include="Resources\Images\*" /> -->
+		
+		<!-- Custom Fonts -->
+		<MauiFont Include="Resources\Fonts\*" />
+
+		<!-- Raw Assets - faqat kerakli fayllar -->
+		<!-- AboutAssets.txt, logo_placeholder.txt, logo.bmp o'chirildi - ishlatilmayapti -->
+		<!-- <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" /> -->
+	</ItemGroup>
+
+	<ItemGroup>
+	  <AndroidResource Remove="Models\LoginPage\**" />
+	  <AndroidResource Remove="Platforms\Android\libs\**" />
+	  <Compile Remove="Models\LoginPage\**" />
+	  <Compile Remove="Platforms\Android\libs\**" />
+	  <EmbeddedResource Remove="Models\LoginPage\**" />
+	  <EmbeddedResource Remove="Platforms\Android\libs\**" />
+	  <MauiCss Remove="Models\LoginPage\**" />
+	  <MauiCss Remove="Platforms\Android\libs\**" />
+	  <MauiXaml Remove="Models\LoginPage\**" />
+	  <MauiXaml Remove="Platforms\Android\libs\**" />
+	  <None Remove="Models\LoginPage\**" />
+	  <None Remove="Platforms\Android\libs\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <AndroidResource Remove="Platforms\Android\Resources\values\styles.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="lib\arm64-v8a\libSerialPort.so" />
+	  <None Remove="lib\arm64-v8a\libSerialPort.so.recipe" />
+	</ItemGroup>
+
+
+
+
+
+	<ItemGroup>
+	    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.10" />
+	    <PackageReference Include="Microsoft.Maui.Essentials" Version="10.0.10" />
+	    <!-- Debug logging faqat Debug build'da -->
+	    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" Condition="'$(Configuration)' == 'Debug'" />
+	    <PackageReference Include="SocketIO.Core" Version="3.1.2" />
+	    <PackageReference Include="SocketIO.Serializer.Core" Version="3.1.2" />
+	    <PackageReference Include="SocketIO.Serializer.SystemTextJson" Version="3.1.2" />
+	    <PackageReference Include="SocketIOClient" Version="3.1.2" />
+	    <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.22" />
+	    <PackageReference Include="ZXing.Net.Maui" Version="0.4.0" />
+	    <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.4.0" />
+	    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+	</ItemGroup>
+
+	<!-- Android Native Library - ARM64 only -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<AndroidNativeLibrary Include="lib\arm64-v8a\libSerialPort.so">
+			<Abi>arm64-v8a</Abi>
+			<Link>lib\arm64-v8a\libSerialPort.so</Link>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</AndroidNativeLibrary>
+	</ItemGroup>
+	
+	<!-- ProGuard Rules for Release -->
+	<ItemGroup Condition="'$(Configuration)' == 'Release' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<ProguardConfiguration Include="Platforms\Android\proguard-rules.pro" />
+	</ItemGroup>
+	
+	<!-- Linker Configuration - Release'da kerakli assembly'larni saqlash -->
+	<ItemGroup>
+		<TrimmerRootDescriptor Include="LinkerConfig.xml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <MauiXaml Update="LoginPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="SplashPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	</ItemGroup>
+
+</Project>

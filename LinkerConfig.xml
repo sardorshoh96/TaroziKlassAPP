@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+	Linker Configuration - Release build'da kerakli assembly'larni saqlash
+	Bu fayl linker tomonidan ishlatiladi
+-->
+<linker>
+	<!-- TaroziAPP - barcha turlarini saqlash (Reflection uchun kerak) -->
+	<assembly fullname="TaroziAPP" preserve="all" />
+	
+	<!-- SocketIO kutubxonalari - Release'da trim qilinmasligi kerak -->
+	<assembly fullname="SocketIOClient" preserve="all" />
+	<assembly fullname="SocketIO.Core" preserve="all" />
+	<assembly fullname="SocketIO.Serializer.Core" preserve="all" />
+	<assembly fullname="SocketIO.Serializer.SystemTextJson" preserve="all" />
+	
+	<!-- System.Linq.Expressions - SocketIO ichida ishlatiladi -->
+	<assembly fullname="System.Linq.Expressions" preserve="all" />
+	
+	<!-- System.Text.Json - serialization uchun kerak -->
+	<assembly fullname="System.Text.Json" preserve="all" />
+</linker>
+
+

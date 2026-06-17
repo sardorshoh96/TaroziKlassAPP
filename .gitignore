@@ -1,0 +1,23 @@
+# Build results
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# JetBrains
+.idea/
+
+# Android
+*.keystore
+# Keep keystore folder but ignore .jks files
+keystore/*.jks
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

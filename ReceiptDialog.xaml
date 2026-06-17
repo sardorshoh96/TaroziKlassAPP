@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TaroziAPP.ReceiptDialog"
+             BackgroundColor="#BF000000"
+             Padding="0">
+
+    <Grid>
+        <Frame Margin="24"
+               Padding="28"
+               BackgroundColor="White"
+               CornerRadius="24"
+               HasShadow="True"
+               VerticalOptions="Center">
+            <StackLayout Spacing="20">
+                <StackLayout Spacing="6" HorizontalOptions="Center">
+                    <Frame Padding="12"
+                           WidthRequest="84"
+                           HeightRequest="84"
+                           CornerRadius="42"
+                           HasShadow="False"
+                           BackgroundColor="#2E3192"
+                           HorizontalOptions="Center">
+                        <Label Text="✅"
+                               FontSize="40"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Frame>
+                    <Label Text="To'lov tasdiqlandi"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           TextColor="#1A237E"
+                           HorizontalOptions="Center" />
+                    <Label x:Name="TimerLabel"
+                           Text="Yopilishiga qolgan vaqt: 30s"
+                           FontSize="13"
+                           TextColor="#607D8B"
+                           HorizontalOptions="Center" />
+                </StackLayout>
+
+                <Grid RowSpacing="12"
+                      ColumnSpacing="12"
+                      ColumnDefinitions="Auto,*"
+                      RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                      Padding="0,8">
+                    <Label Text="Sana"
+                           FontSize="15"
+                           TextColor="#607D8B"
+                           Grid.Row="0"
+                           Grid.Column="0" />
+                    <Label x:Name="DateLabel"
+                           FontSize="15"
+                           FontAttributes="Bold"
+                           TextColor="#1A237E"
+                           LineBreakMode="TailTruncation"
+                           Grid.Row="0"
+                           Grid.Column="1" />
+
+                    <Label Text="Vaqt"
+                           FontSize="15"
+                           TextColor="#607D8B"
+                           Grid.Row="1"
+                           Grid.Column="0" />
+                    <Label x:Name="TimeLabel"
+                           FontSize="15"
+                           FontAttributes="Bold"
+                           TextColor="#1A237E"
+                           LineBreakMode="TailTruncation"
+                           Grid.Row="1"
+                           Grid.Column="1" />
+
+                    <Label Text="Og'irlik"
+                           FontSize="15"
+                           TextColor="#607D8B"
+                           Grid.Row="2"
+                           Grid.Column="0" />
+                    <Label x:Name="WeightLabel"
+                           FontSize="22"
+                           FontAttributes="Bold"
+                           TextColor="#D32F2F"
+                           LineBreakMode="TailTruncation"
+                           Grid.Row="2"
+                           Grid.Column="1" />
+
+                    <Label Text="Summa"
+                           FontSize="15"
+                           TextColor="#607D8B"
+                           Grid.Row="3"
+                           Grid.Column="0" />
+                    <Label x:Name="AmountLabel"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#2E3192"
+                           Grid.Row="3"
+                           Grid.Column="1" />
+
+                    <Label Text="Manzil"
+                           FontSize="15"
+                           TextColor="#607D8B"
+                           Grid.Row="4"
+                           Grid.Column="0" />
+                    <Label x:Name="AddressLabel"
+                           FontSize="15"
+                           TextColor="#1A237E"
+                           LineBreakMode="WordWrap"
+                           Grid.Row="4"
+                           Grid.Column="1" />
+                </Grid>
+
+                <Button Text="Yopish"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        BackgroundColor="#2E3192"
+                        TextColor="White"
+                        CornerRadius="16"
+                        HeightRequest="52"
+                        Clicked="OnCloseClicked" />
+            </StackLayout>
+        </Frame>
+    </Grid>
+
+</ContentPage>
+
