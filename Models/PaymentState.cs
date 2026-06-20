@@ -32,9 +32,9 @@ namespace TaroziAPP.Models
             }
         }
 
-        // BALANS_CHECK_OFF - Vaqtincha o'chirilgan (tiklash uchun quyidagi qatorni yoching va ustidagini o'chiring)
-        public bool IsCompleted => ShouldPay > 0; // Balans tekshiruvsiz
-        // BALANS_CHECK_ON: public bool IsCompleted => ShouldPay > 0 && BankBalance >= ShouldPay;
+        // BALANS_CHECK_ON - Balans tekshiruvi yoqilgan
+        public bool IsCompleted => ShouldPay > 0 && BankBalance >= ShouldPay;
+        // BALANS_CHECK_OFF: public bool IsCompleted => ShouldPay > 0; // Balans tekshiruvsiz
 
         public string ShouldPayText => $"To'lanishi kerak: {ShouldPay:N0} so'm";
         public string BankBalanceText => $"To'landi: {BankBalance:N0} so'm";
@@ -54,9 +54,9 @@ namespace TaroziAPP.Models
         public void ConfirmPayment()
         {
             if (!IsCompleted) return;
-            // BALANS_CHECK_OFF - Balans ayirilmaydi, faqat ShouldPay sifirlanadi
-            // BALANS_CHECK_ON: var newBalance = BankBalance - ShouldPay;
-            // BALANS_CHECK_ON: BankBalance = newBalance;
+            // BALANS_CHECK_ON - To'langan summani balansdan ayirish, qoldiq saqlanadi
+            var newBalance = BankBalance - ShouldPay;
+            BankBalance = newBalance > 0 ? newBalance : 0;
             ShouldPay = 0;
         }
 
