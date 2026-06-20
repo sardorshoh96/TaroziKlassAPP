@@ -26,6 +26,20 @@ public class MainActivity : MauiAppCompatActivity
         AndroidEnvironment.UnhandledExceptionRaiser += OnUnhandledException;
         base.OnCreate(savedInstanceState);
 
+        if (Intent?.Action == "uz.taroziklass.CLEAR_DEVICE_OWNER")
+        {
+            var dpm = (Android.App.Admin.DevicePolicyManager)GetSystemService(Android.Content.Context.DevicePolicyService);
+            try
+            {
+                dpm.ClearDeviceOwnerApp(PackageName);
+                Console.WriteLine("[MainActivity] ✅ Device owner cleared successfully via intent!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MainActivity] ❌ Failed to clear device owner: {ex.Message}");
+            }
+        }
+
         try
         {
             if (KioskService.IsKioskActive(this))
@@ -55,6 +69,16 @@ public class MainActivity : MauiAppCompatActivity
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[MainActivity] OnResume kiosk error: {ex.Message}");
+        }
+
+        // Foydalanuvchi "Install unknown apps" Settings dan ruxsat berib qaytsa — pending APK o'rnatiladi
+        try
+        {
+            App.Services.GetService<TaroziAPP.Services.AppUpdateService>()?.TryInstallPendingApk();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainActivity] TryInstallPendingApk error: {ex.Message}");
         }
     }
 

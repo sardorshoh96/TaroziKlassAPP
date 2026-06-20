@@ -13,7 +13,7 @@
 	<!-- USB Host: printer bilan bevosita gaplashish uchun -->
 	<uses-feature android:name="android.hardware.usb.host" android:required="false" />
 	
-	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:testOnly="true">
+	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true">
 		<receiver
 			android:name="TaroziAPP.Platforms.Android.DeviceAdminReceiver"
 			android:permission="android.permission.BIND_DEVICE_ADMIN"
@@ -36,5 +36,13 @@
 				android:name="android.support.FILE_PROVIDER_PATHS"
 				android:resource="@xml/file_provider_paths" />
 		</provider>
+
+		<receiver
+			android:name="uz.taroziklass.PackageInstallReceiver"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="uz.taroziklass.PACKAGE_INSTALLED" />
+			</intent-filter>
+		</receiver>
 	</application>
 </manifest>

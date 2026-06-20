@@ -17,8 +17,8 @@
 		<ApplicationId>uz.taroziklass</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
-		<ApplicationVersion>2</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.2</ApplicationDisplayVersion>
+		<ApplicationVersion>3</ApplicationVersion>
 
 		<!-- Android specific configuration -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
@@ -39,12 +39,6 @@
 	
 	<!-- Release Build Configuration - Maksimal optimizatsiya -->
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<!-- AOT Compilation - Hybrid mode (AOT + JIT) for compatibility -->
-		<!-- Full AOT causes JIT compilation errors with Marshal.PtrToStructure -->
-		<AndroidEnableAssemblyILStripping>true</AndroidEnableAssemblyILStripping>
-		<AndroidAotMode>Hybrid</AndroidAotMode>
-		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
-		
 		<!-- Package format: APK for direct install (Play Store emas) -->
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
 		
@@ -57,9 +51,6 @@
 		<AndroidIncludeDebugSymbols>true</AndroidIncludeDebugSymbols>
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>portable</DebugType>
-		
-		<!-- Enable code obfuscation -->
-		<AndroidEnableProguard>true</AndroidEnableProguard>
 		
 		<!-- Resource shrinking - removes unused resources -->
 		<AndroidResgenExtraArgs>--no-version-vectors</AndroidResgenExtraArgs>
