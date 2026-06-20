@@ -129,7 +129,7 @@ namespace TaroziAPP.Services
                             {
                                 Id = refreshResult.Data.Id ?? "",
                                 Name = refreshResult.Data.Name ?? "",
-                                PhoneNumber = refreshResult.Data.PhoneNumber ?? "",
+                                PhoneNumber = refreshResult.Data.ServicePhoneNumber ?? "",
                                 Password = refreshResult.Data.Password ?? "",  // JSON dan kelgan nastroyka paroli
                                 Payments = refreshResult.Data.Payments?.Select(p => new Payment
                                 {
@@ -206,7 +206,7 @@ namespace TaroziAPP.Services
                     {
                         Id = dto.Id ?? "",
                         Name = dto.Name ?? "",
-                        PhoneNumber = dto.PhoneNumber ?? "",
+                        PhoneNumber = dto.ServicePhoneNumber ?? "",
                         Password = dto.Password ?? "",  // JSON dan kelgan nastroyka paroli
                         Payments = dto.Payments?.Select(p => new Payment
                         {
