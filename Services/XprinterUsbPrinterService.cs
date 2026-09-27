@@ -486,7 +486,7 @@ namespace TaroziAPP.Services
             // ── URL ───────────────────────────────────────────────────
             AddBytes(new byte[] { 0x1B, 0x61, 0x01 });     // center
             AddBytes(new byte[] { 0x1B, 0x45, 0x01, 0x1B, 0x47, 0x01 });
-            AddText("https://taroziklass.uz/\n");
+            AddText("https://taroziklass.uz/\n\n\n\n");
             AddBytes(new byte[] { 0x1B, 0x47, 0x00, 0x1B, 0x45, 0x00 });
             AddBytes(new byte[] { 0x1B, 0x61, 0x00 });     // left
 

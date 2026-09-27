@@ -21,6 +21,13 @@ namespace TaroziAPP.Services
         private const string PrinterPortPreferenceKey = "printer_port";
         private const string PrinterBaudRatePreferenceKey = "printer_baud_rate";
 
+        // Receipt layout
+        private const int PaperColumns = 48;          // 80mm paper, font A (11 CPI)
+        private const byte NormalLineSpacing = 0x30;  // 48 dots - 2x the ESC/POS default (24)
+        // This printer multiplies the line feed by the height magnification, so a magnified
+        // line needs a SMALLER spacing value: 30 x 4 = 120 dots for a 96 dot tall character.
+        private const byte TallLineSpacing = 0x1E;    // 30 dots
+
         public string PortName { get; private set; }
         public int BaudRate { get; private set; }
         private int _fd = -1;
@@ -128,7 +135,7 @@ namespace TaroziAPP.Services
               
                 // Set line spacing to default for better clarity
                 // ESC 3 n - Set line spacing (n=0-255, default=30)
-                AddBytes(new byte[] { 0x1B, 0x33, 0x18 }); // 24 dots line spacing
+                AddBytes(new byte[] { 0x1B, 0x33, NormalLineSpacing }); // 48 dots line spacing (2x longer receipt)
               
 
                 // Enable double strike globally for all text (except where explicitly disabled)
@@ -136,11 +143,13 @@ namespace TaroziAPP.Services
                 AddBytes(new byte[] { 0x1B, 0x47, 0x01 }); // ESC G 1 = Double strike ON
                
 
-                // Print header - Center aligned, Bold, Normal font (11 CPI) with enhanced clarity
+                // Print header - Center aligned, Bold, Double size with enhanced clarity
+                // "TAROZI KLASS" = 12 chars, at 2x width = 24 of 48 columns
                 AddBytes(new byte[] { 0x1B, 0x61, 0x01 }); // ESC a 1 = Center
                 AddBytes(new byte[] { 0x1B, 0x45, 0x01 }); // ESC E 1 = Bold ON
-                AddBytes(new byte[] { 0x1B, 0x21, 0x00 }); // ESC ! 0 = Normal size (11 CPI)
+                AddBytes(new byte[] { 0x1D, 0x21, 0x11 }); // GS ! 0x11 = 2x width, 2x height
                 AddText("TAROZI KLASS\n");
+                AddBytes(new byte[] { 0x1D, 0x21, 0x00 }); // GS ! 0 = Normal size
                 AddBytes(new byte[] { 0x1B, 0x47, 0x00 }); // ESC G 0 = Double strike OFF
                 AddBytes(new byte[] { 0x1B, 0x45, 0x00 }); // ESC E 0 = Bold OFF
                 AddBytes(new byte[] { 0x1B, 0x61, 0x00 }); // ESC a 0 = Left align
@@ -155,13 +164,13 @@ namespace TaroziAPP.Services
                 if (!string.IsNullOrWhiteSpace(carNumber))
                 {
                     AddBytes(new byte[] { 0x1B, 0x61, 0x01 }); // Center align
-                    AddBytes(new byte[] { 0x1B, 0x21, 0x11 }); // Double width + height
+                    AddBytes(new byte[] { 0x1D, 0x21, 0x11 }); // GS ! 0x11 = 2x width, 2x height
                     AddBytes(new byte[] { 0x1B, 0x45, 0x01 }); // Bold ON
                     AddBytes(new byte[] { 0x1B, 0x47, 0x01 }); // Double strike ON
                     AddText($"{carNumber}\n");
                     AddBytes(new byte[] { 0x1B, 0x47, 0x00 }); // Double strike OFF
                     AddBytes(new byte[] { 0x1B, 0x45, 0x00 }); // Bold OFF
-                    AddBytes(new byte[] { 0x1B, 0x21, 0x00 }); // Normal size
+                    AddBytes(new byte[] { 0x1D, 0x21, 0x00 }); // GS ! 0 = Normal size
                     AddBytes(new byte[] { 0x1B, 0x61, 0x00 }); // Left align
                    
 
@@ -194,15 +203,24 @@ namespace TaroziAPP.Services
                 AddText("  --------------------------------\n");
                 AddBytes(new byte[] { 0x1B, 0x47, 0x00 }); // ESC G 0 = Double strike OFF
 
-                // Print weight - Center aligned, Large font (Double width + height) with enhanced clarity
+                // Print weight - Center aligned, largest text on the receipt (value only, no label)
+                string weightText = $"{weightKg:0.###} kg";
+                // 4x width needs <= 12 chars to fit 48 columns; fall back to 3x for heavier loads
+                byte weightSize = weightText.Length * 4 <= PaperColumns ? (byte)0x33 : (byte)0x22;
+
                 AddBytes(new byte[] { 0x1B, 0x61, 0x01 }); // Center align
-                AddBytes(new byte[] { 0x1B, 0x21, 0x11 }); // ESC ! 0x11 = Double width + height (11 CPI)
                 AddBytes(new byte[] { 0x1B, 0x45, 0x01 }); // ESC E 1 = Bold ON
                 AddBytes(new byte[] { 0x1B, 0x47, 0x01 }); // ESC G 1 = Double strike ON for darker text
-                AddText($"Og'irlik: {weightKg:0.###} kg\n");
+
+                // Magnified line needs its own (smaller) spacing - see TallLineSpacing
+                AddBytes(new byte[] { 0x1B, 0x33, TallLineSpacing });
+                AddBytes(new byte[] { 0x1D, 0x21, weightSize }); // GS ! = 4x (or 3x) width and height
+                AddText($"{weightText}\n");
+                AddBytes(new byte[] { 0x1B, 0x33, NormalLineSpacing });
+
+                AddBytes(new byte[] { 0x1D, 0x21, 0x00 }); // GS ! 0 = Normal size
                 AddBytes(new byte[] { 0x1B, 0x47, 0x00 }); // ESC G 0 = Double strike OFF
                 AddBytes(new byte[] { 0x1B, 0x45, 0x00 }); // ESC E 0 = Bold OFF
-                AddBytes(new byte[] { 0x1B, 0x21, 0x00 }); // ESC ! 0x00 = Normal size
                 AddBytes(new byte[] { 0x1B, 0x61, 0x00 }); // Left align
                 
 

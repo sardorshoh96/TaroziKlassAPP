@@ -149,6 +149,7 @@ public sealed class JsonRpcClient
             Console.WriteLine($"[JsonRpcClient] RPC Result deserialized successfully. Type: {resultValue.GetType().Name}");
             return ApiResult<T>.Success(resultValue);
         }
+        
     }
 }
 
