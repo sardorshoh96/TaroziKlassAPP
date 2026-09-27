@@ -227,9 +227,9 @@ namespace TaroziAPP
                 {
                     try
                     {
-                        // GitHub'dan klonlangan Flutter kodida Socket.IO URL: https://device.radiomer.uz
+                        // GitHub'dan klonlangan Flutter kodida Socket.IO URL: https://device.radiomer.app
                         // Manba: libra/lib/provider/socket_service_provider.dart
-                        var socketUrl = "https://device.radiomer.uz";
+                        var socketUrl = "https://device.radiomer.app";
                         System.Diagnostics.Debug.WriteLine($"[MainPage] 🔌 Socket ulanishga urinmoqda: {socketUrl}");
                         await _socketService.ConnectAsync(
                             socketUrl,
@@ -347,7 +347,7 @@ namespace TaroziAPP
                         				var photoRef = payment.Type.Photo;
 				
 				// Use fileRef parameter like libra project
-				var imageUrl = $"https://device.radiomer.uz/rest/files?fileRef={photoRef}";
+				var imageUrl = $"https://device.radiomer.app/rest/files?fileRef={photoRef}";
 
                         // Load image (will cache automatically)
                         tasks.Add(Task.Run(async () =>

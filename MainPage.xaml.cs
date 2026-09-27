@@ -1390,7 +1390,7 @@ public partial class MainPage : ContentPage
 				var photoRef = payment.Type.Photo;
 			
 				// Use fileRef parameter like libra project
-				var imageUrl = $"https://device.radiomer.uz/rest/files?fileRef={photoRef}";	
+				var imageUrl = $"https://device.radiomer.app/rest/files?fileRef={photoRef}";	
 				try
 				{
 					// Load from cache (or download if not cached)

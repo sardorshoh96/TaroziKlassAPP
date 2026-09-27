@@ -9,7 +9,7 @@ public sealed class DeviceService
 
     public DeviceService(JsonRpcClient? client = null)
     {
-        _client = client ?? new JsonRpcClient("https://device.radiomer.uz/api/device/v1");
+        _client = client ?? new JsonRpcClient("https://device.radiomer.app/api/device/v1");
     }
 
     /// <summary>

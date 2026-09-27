@@ -10,7 +10,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
 
         // Register services
-        builder.Services.AddSingleton<JsonRpcClient>(sp => new JsonRpcClient("https://device.radiomer.uz/api/device/v1"));
+        builder.Services.AddSingleton<JsonRpcClient>(sp => new JsonRpcClient("https://device.radiomer.app/api/device/v1"));
         builder.Services.AddSingleton<DeviceService>();
         builder.Services.AddSingleton<PaymentService>();
         builder.Services.AddSingleton<CredentialStorageService>();

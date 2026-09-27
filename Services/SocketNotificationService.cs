@@ -54,7 +54,7 @@ public sealed class SocketNotificationService : IAsyncDisposable
                 {
                     _lastLogin = credentials.Login;
                     _lastPassword = credentials.Password;
-                    _lastUrl = "https://device.radiomer.uz";
+                    _lastUrl = "https://device.radiomer.app";
                 }
             }
 
