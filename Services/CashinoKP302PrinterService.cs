@@ -97,9 +97,9 @@ namespace TaroziAPP.Services
         /// <param name="weightKg">Weight in kilograms</param>
         /// <param name="dateTime">Date and time</param>
         /// <param name="address">Address</param>
-        public async Task<bool> PrintReceiptAsync(double weightKg, DateTime dateTime, string address, string carNumber = "")
+        public async Task<bool> PrintReceiptAsync(double weightKg, DateTime dateTime, string address, string carNumber = "", double tara = 0)
         {
-            System.Diagnostics.Debug.WriteLine($"[CashinoPrinter] ▶ PrintReceiptAsync START: weight={weightKg}, fd={_fd}");
+            System.Diagnostics.Debug.WriteLine($"[CashinoPrinter] ▶ PrintReceiptAsync START: weight={weightKg}, tara={tara}, fd={_fd}");
             // Use existing connection
             if (_fd < 0)
             {
@@ -203,8 +203,42 @@ namespace TaroziAPP.Services
                 AddText("  --------------------------------\n");
                 AddBytes(new byte[] { 0x1B, 0x47, 0x00 }); // ESC G 0 = Double strike OFF
 
+                // Tara kiritilgan bo'lsa: Brutto va Tara qatorlari + Netto (yuk) katta
+                // Netto <=0 bo'lsa: "Netto (yuk)" yozuvi chiqadi, lekin katta raqam o'rni bo'sh qoladi
+                bool hasTara = tara > 0;
+                double netRaw = weightKg - tara;
+                string nettoNumber = netRaw > 0 ? $"{netRaw:0.###} kg" : "";
+                if (hasTara)
+                {
+                    AddBytes(new byte[] { 0x1B, 0x45, 0x01 }); // Bold ON
+                    AddBytes(new byte[] { 0x1B, 0x47, 0x01 }); // Double strike ON
+                    AddText("   Brutto: ");
+                    AddBytes(new byte[] { 0x1B, 0x45, 0x00 }); // Bold OFF
+                    AddText($"{weightKg:0.###} kg");
+                    AddBytes(new byte[] { 0x1B, 0x47, 0x00 });
+                    AddText("\n");
+
+                    AddBytes(new byte[] { 0x1B, 0x45, 0x01 });
+                    AddBytes(new byte[] { 0x1B, 0x47, 0x01 });
+                    AddText("   Tara:   ");
+                    AddBytes(new byte[] { 0x1B, 0x45, 0x00 });
+                    AddText($"{tara:0.###} kg");
+                    AddBytes(new byte[] { 0x1B, 0x47, 0x00 });
+                    AddText("\n");
+
+                    // "Netto (yuk)" izoh - markazda
+                    AddBytes(new byte[] { 0x1B, 0x61, 0x01 }); // Center
+                    AddBytes(new byte[] { 0x1B, 0x45, 0x01 });
+                    AddBytes(new byte[] { 0x1B, 0x47, 0x01 });
+                    AddText("Netto (yuk)\n");
+                    AddBytes(new byte[] { 0x1B, 0x47, 0x00 });
+                    AddBytes(new byte[] { 0x1B, 0x45, 0x00 });
+                    AddBytes(new byte[] { 0x1B, 0x61, 0x00 }); // Left
+                }
+
                 // Print weight - Center aligned, largest text on the receipt (value only, no label)
-                string weightText = $"{weightKg:0.###} kg";
+                // Tara bo'lsa netto (yuk) og'irligi, aks holda o'lchangan og'irlik
+                string weightText = hasTara ? nettoNumber : $"{weightKg:0.###} kg";
                 // 4x width needs <= 12 chars to fit 48 columns; fall back to 3x for heavier loads
                 byte weightSize = weightText.Length * 4 <= PaperColumns ? (byte)0x33 : (byte)0x22;
 

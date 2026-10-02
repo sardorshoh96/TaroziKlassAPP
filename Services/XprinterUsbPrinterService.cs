@@ -323,9 +323,9 @@ namespace TaroziAPP.Services
         // ─────────────────────────────────────────────────────────────────────
 
         public async Task<bool> PrintReceiptAsync(
-            double weightKg, DateTime dateTime, string address, string carNumber = "")
+            double weightKg, DateTime dateTime, string address, string carNumber = "", double tara = 0)
         {
-            Debug.WriteLine($"[XprinterUSB] ▶ PrintReceiptAsync: weight={weightKg}");
+            Debug.WriteLine($"[XprinterUSB] ▶ PrintReceiptAsync: weight={weightKg}, tara={tara}");
 
 #if ANDROID
             // 1. Android USB Host API orqali urinish (root talab qilmaydi)
@@ -334,7 +334,7 @@ namespace TaroziAPP.Services
                 bool connected = _androidUsbDriver.Connect();
                 if (connected)
                 {
-                    var buffer = BuildEscPosBuffer(weightKg, dateTime, address, carNumber);
+                    var buffer = BuildEscPosBuffer(weightKg, dateTime, address, carNumber, tara);
                     bool sent = _androidUsbDriver.Write(buffer);
                     if (sent)
                     {
@@ -361,7 +361,7 @@ namespace TaroziAPP.Services
 
             try
             {
-                var data = BuildEscPosBuffer(weightKg, dateTime, address, carNumber);
+                var data = BuildEscPosBuffer(weightKg, dateTime, address, carNumber, tara);
                 await WriteToDeviceAsync(data);
 
                 Debug.WriteLine($"[XprinterUSB] ✅ Print done. Bytes: {data.Length}");
@@ -379,7 +379,7 @@ namespace TaroziAPP.Services
         /// Android USB driver va root fallback ikkalasi ham shu metoddan foydalanadi.
         /// </summary>
         internal static byte[] BuildEscPosBuffer(
-            double weightKg, DateTime dateTime, string address, string carNumber = "")
+            double weightKg, DateTime dateTime, string address, string carNumber = "", double tara = 0)
         {
             var buffer = new List<byte>();
 
@@ -454,12 +454,25 @@ namespace TaroziAPP.Services
             AddText("  --------------------------------\n");
             AddBytes(new byte[] { 0x1B, 0x47, 0x00 });
 
-            // ── Weight (2x katta, markazda) ───────────────────────────
+            // ── Tara (ixtiyoriy): Brutto/Tara + Netto. Netto <=0 bo'lsa raqam o'rni bo'sh ──
+            bool hasTara = tara > 0;
+            double netRaw = weightKg - tara;
+            string nettoNumber = netRaw > 0 ? $"{netRaw:0.###} kg" : "";
+            if (hasTara)
+            {
+                AddBytes(new byte[] { 0x1B, 0x45, 0x01, 0x1B, 0x47, 0x01 }); // bold + double strike
+                AddText($"   Brutto: {weightKg:0.###} kg\n");
+                AddText($"   Tara:   {tara:0.###} kg\n");
+                AddBytes(new byte[] { 0x1B, 0x47, 0x00 });
+                AddBytes(new byte[] { 0x1B, 0x45, 0x00 });
+            }
+
+            // ── Weight (2x katta, markazda; tara bo'lsa Netto/yuk) ─────
             AddBytes(new byte[] { 0x1B, 0x61, 0x01 });     // center
             AddBytes(new byte[] { 0x1D, 0x21, 0x11 });     // 2x width × 2x height (GS !)
             AddBytes(new byte[] { 0x1B, 0x45, 0x01 });     // bold ON
             AddBytes(new byte[] { 0x1B, 0x47, 0x01 });     // double strike ON
-            AddText($"Og'irlik: {weightKg:0.###} kg\n");
+            AddText($"{(hasTara ? $"Netto: {nettoNumber}" : $"Og'irlik: {weightKg:0.###} kg")}\n");
             AddBytes(new byte[] { 0x1B, 0x47, 0x00 });
             AddBytes(new byte[] { 0x1B, 0x45, 0x00 });
             AddBytes(new byte[] { 0x1D, 0x21, 0x00 });     // normal size (GS ! reset)

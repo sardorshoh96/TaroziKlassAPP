@@ -78,9 +78,9 @@ namespace TaroziAPP.Services
         /// <summary>
         /// Prints receipt with weight, date, and address
         /// </summary>
-        public async Task<bool> PrintReceiptAsync(double weightKg, DateTime dateTime, string address, string carNumber = "")
+        public async Task<bool> PrintReceiptAsync(double weightKg, DateTime dateTime, string address, string carNumber = "", double tara = 0)
         {
-            System.Diagnostics.Debug.WriteLine($"[Printer701] ▶ PrintReceiptAsync START: weight={weightKg}, fd={_fd}");
+            System.Diagnostics.Debug.WriteLine($"[Printer701] ▶ PrintReceiptAsync START: weight={weightKg}, tara={tara}, fd={_fd}");
             // Use existing connection
             if (_fd < 0)
             {
@@ -173,16 +173,30 @@ namespace TaroziAPP.Services
                 AddText("  -----------------------------\n");
                 AddBytes(new byte[] { 0x1B, 0x47, 0x00 }); 
 
-                // Weight
-                AddBytes(new byte[] { 0x1B, 0x61, 0x01 }); 
-                AddBytes(new byte[] { 0x1B, 0x21, 0x11 }); 
-                AddBytes(new byte[] { 0x1B, 0x45, 0x01 }); 
-                AddBytes(new byte[] { 0x1B, 0x47, 0x01 }); 
-                AddText($"Og'irlik: {weightKg:0.###} kg\n");
-                AddBytes(new byte[] { 0x1B, 0x47, 0x00 }); 
-                AddBytes(new byte[] { 0x1B, 0x45, 0x00 }); 
-                AddBytes(new byte[] { 0x1B, 0x21, 0x00 }); 
-                AddBytes(new byte[] { 0x1B, 0x61, 0x00 }); 
+                // Tara (ixtiyoriy): Brutto/Tara + Netto. Netto <=0 bo'lsa raqam o'rni bo'sh qoladi
+                bool hasTara = tara > 0;
+                double netRaw = weightKg - tara;
+                string nettoNumber = netRaw > 0 ? $"{netRaw:0.###} kg" : "";
+                if (hasTara)
+                {
+                    AddBytes(new byte[] { 0x1B, 0x45, 0x01 }); // Bold ON
+                    AddBytes(new byte[] { 0x1B, 0x47, 0x01 }); // Double strike ON
+                    AddText($"   Brutto: {weightKg:0.###} kg\n");
+                    AddText($"   Tara:   {tara:0.###} kg\n");
+                    AddBytes(new byte[] { 0x1B, 0x47, 0x00 });
+                    AddBytes(new byte[] { 0x1B, 0x45, 0x00 });
+                }
+
+                // Weight (tara bo'lsa Netto/yuk, aks holda o'lchangan og'irlik)
+                AddBytes(new byte[] { 0x1B, 0x61, 0x01 });
+                AddBytes(new byte[] { 0x1B, 0x21, 0x11 });
+                AddBytes(new byte[] { 0x1B, 0x45, 0x01 });
+                AddBytes(new byte[] { 0x1B, 0x47, 0x01 });
+                AddText($"{(hasTara ? $"Netto: {nettoNumber}" : $"Og'irlik: {weightKg:0.###} kg")}\n");
+                AddBytes(new byte[] { 0x1B, 0x47, 0x00 });
+                AddBytes(new byte[] { 0x1B, 0x45, 0x00 });
+                AddBytes(new byte[] { 0x1B, 0x21, 0x00 });
+                AddBytes(new byte[] { 0x1B, 0x61, 0x00 });
                 
                 // Separator
                 AddBytes(new byte[] { 0x1B, 0x47, 0x01 }); 

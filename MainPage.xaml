@@ -189,6 +189,26 @@
                                        TextChanged="OnCarNumberChanged"
                                        HorizontalTextAlignment="Center"
                                        HorizontalOptions="Fill"/>
+
+                                <!-- Mashina tarasi (bo'sh og'irligi) — ixtiyoriy -->
+                                <BoxView HeightRequest="1" Color="#EEEEEE" Margin="0,8"/>
+                                <Label Text="⚖️ Mashina tarasi (kg) — ixtiyoriy"
+                                       FontSize="13"
+                                       TextColor="#666666"
+                                       HorizontalOptions="Center"
+                                       FontAttributes="Bold"/>
+                                <Entry x:Name="TaraEntry"
+                                       Placeholder="0"
+                                       PlaceholderColor="#BDBDBD"
+                                       TextColor="Black"
+                                       FontSize="24"
+                                       FontAttributes="Bold"
+                                       BackgroundColor="Transparent"
+                                       Keyboard="Numeric"
+                                       MaxLength="8"
+                                       TextChanged="OnTaraChanged"
+                                       HorizontalTextAlignment="Center"
+                                       HorizontalOptions="Fill"/>
                             </StackLayout>
                         </Border>
                     </StackLayout>

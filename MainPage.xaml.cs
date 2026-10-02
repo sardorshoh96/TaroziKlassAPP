@@ -19,6 +19,7 @@ public partial class MainPage : ContentPage
 {
 	
     private double currentWeight = 0;
+    private double _tara = 0; // mashina tarasi (bo'sh og'irligi), kg — ixtiyoriy
 	private bool isOnline = true;
 	private bool isKioskMode = true; // Enable kiosk mode by default
 	private string _carNumber = ""; // Mashina davlat raqami
@@ -415,7 +416,8 @@ public partial class MainPage : ContentPage
 	private void OnWeightChanged(int weight)
 	{
 		currentWeight = weight / 1000.0 ;// Convert from grams to kg
-		
+		System.Diagnostics.Debug.WriteLine($"[MainPage] ⚖️ Og'irlik: {weight} g -> {currentWeight} kg");
+
 		MainThread.BeginInvokeOnMainThread(() =>
 		{
 			UpdateShouldPayAmount();
@@ -760,16 +762,28 @@ public partial class MainPage : ContentPage
 
 			// To'langan summani va o'sha vaqtdagi aniq vaznni saqlash (ConfirmPayment dan oldin)
 			int paidAmount = paymentState.ShouldPay;
-			double confirmedWeight = currentWeight;
-			
+			double gross = currentWeight;          // o'lchangan (brutto) og'irlik
+
+			// Tara ixtiyoriy: kiritilgan bo'lsa ishlatamiz (brutto 0/kichik bo'lsa ham)
+			double tara = _tara > 0 ? _tara : 0;
+			double net = Math.Max(0, gross - tara); // netto 0 yoki kichik bo'lsa ham chiqadi (manfiy emas)
+
+			// Chek uchun ma'lumotlarni saqlab olamiz (PrintReceipt carNumber ni tozalaydi)
+			string carNumber = _carNumber;
+			string address = Preferences.Get("device_address", "");
+			DateTime receiptTime = DateTime.Now;
+
 			// To'lovni tasdiqlash (dialog'siz, to'g'ridan-to'g'ri)
 			paymentState.ConfirmPayment();
-			
-			// Printer qilish (ayni to'lov qilingan vaqtdagi vazn bilan)
-			await PrintReceipt(confirmedWeight).ConfigureAwait(false);
-			
-			// ReceiptDialog ko'rsatish va socket orqali paymentReceived yuborish
-			await ShowReceiptAndSendSocket(confirmedWeight, paidAmount).ConfigureAwait(false);
+
+			// Chek chiqarish: tara bo'lsa printer brutto/tara/netto ni ko'rsatadi
+			await PrintReceipt(gross, tara).ConfigureAwait(false);
+
+			// ReceiptDialog (ekranda) — yuk (netto) og'irligini ko'rsatamiz
+			await ShowReceiptAndSendSocket(net, paidAmount).ConfigureAwait(false);
+
+			// Chekni Telegram botga ham yuborish (bosilgan chek bilan bir xil tuzilish)
+			_ = SendReceiptToTelegramAsync(gross, tara, carNumber, address, receiptTime);
 		}
 		catch (Exception ex)
 		{
@@ -777,32 +791,92 @@ public partial class MainPage : ContentPage
 		}
 	}
 	
-	private async Task PrintReceipt(double weightToPrint)
+	// Bosilgan chek bilan bir xil tuzilishdagi matnni Telegram botga yuboradi (egasi chatiga)
+	private async Task SendReceiptToTelegramAsync(double gross, double tara, string carNumber, string address, DateTime dateTime)
+	{
+		try
+		{
+			if (currentDevice == null) return;
+			string text = BuildReceiptText(gross, tara, carNumber, address, dateTime);
+			await _deviceService.SendTelegramNotificationAsync(
+				deviceId: currentDevice.Id,
+				deviceName: currentDevice.Name,
+				message: text
+			).ConfigureAwait(false);
+			System.Diagnostics.Debug.WriteLine("[MainPage] 📨 Chek Telegramga yuborildi");
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"[MainPage] Telegramga chek yuborish xatosi: {ex.Message}");
+		}
+	}
+
+	// Chek matni (bosilgan chek bilan bir xil tartib). Netto <=0 bo'lsa raqam o'rni bo'sh qoladi.
+	private static string BuildReceiptText(double gross, double tara, string carNumber, string address, DateTime dateTime)
+	{
+		bool hasTara = tara > 0;
+		double netRaw = gross - tara;
+		string nettoNumber = netRaw > 0 ? $"{netRaw:0.###} kg" : "";
+		const string sep = "------------------------------";
+
+		var sb = new System.Text.StringBuilder();
+		sb.AppendLine("         TAROZI KLASS");
+		sb.AppendLine(sep);
+		if (!string.IsNullOrWhiteSpace(carNumber))
+		{
+			sb.AppendLine($"          {carNumber}");
+			sb.AppendLine(sep);
+		}
+		sb.AppendLine($"Sana:  {dateTime:dd.MM.yyyy}");
+		sb.AppendLine($"Vaqt:  {dateTime:HH:mm:ss}");
+		sb.AppendLine(sep);
+		if (hasTara)
+		{
+			sb.AppendLine($"Brutto: {gross:0.###} kg");
+			sb.AppendLine($"Tara:   {tara:0.###} kg");
+			sb.AppendLine($"Netto:  {nettoNumber}");
+		}
+		else
+		{
+			sb.AppendLine($"Og'irlik: {gross:0.###} kg");
+		}
+		sb.AppendLine(sep);
+		sb.AppendLine($"Manzil: {(string.IsNullOrWhiteSpace(address) ? "-" : address)}");
+		return sb.ToString().TrimEnd();
+	}
+
+	private async Task PrintReceipt(double grossWeight, double tara = 0)
 	{
 		try
 		{
 			// Address ni olish - faqat Preferences'dan
 			string address = Preferences.Get("device_address", "");
-			
+
 			// Printer qilish
 			if (_printerService != null)
 			{
-				System.Diagnostics.Debug.WriteLine($"[PrintReceipt] 🖨️ Chek chiqarilmoqda: weight={weightToPrint} kg");
+				System.Diagnostics.Debug.WriteLine($"[PrintReceipt] 🖨️ Chek chiqarilmoqda: brutto={grossWeight} kg, tara={tara} kg");
 				await _printerService.PrintReceiptAsync(
-					weightToPrint,
+					grossWeight,
 					DateTime.Now,
 					address,
-					_carNumber
+					_carNumber,
+					tara
 				).ConfigureAwait(false);
 
-				// Chek chiqarilgandan keyin mashina raqamini tozalash
+				// Chek chiqarilgandan keyin mashina raqami va tarani tozalash
 				MainThread.BeginInvokeOnMainThread(() =>
 				{
 					if (CarNumberEntry != null)
 					{
 						CarNumberEntry.Text = string.Empty;
 					}
+					if (TaraEntry != null)
+					{
+						TaraEntry.Text = string.Empty;
+					}
 					_carNumber = string.Empty;
+					_tara = 0;
 				});
 			}
 			else
@@ -829,6 +903,23 @@ public partial class MainPage : ContentPage
 		}
 
 		System.Diagnostics.Debug.WriteLine($"[MainPage] Mashina raqami: {_carNumber}");
+	}
+
+	private void OnTaraChanged(object sender, TextChangedEventArgs e)
+	{
+		// Faqat raqam (kasr nuqta/vergul bilan) — tara kg da
+		var text = (e.NewTextValue ?? "").Trim().Replace(',', '.');
+		if (string.IsNullOrEmpty(text))
+		{
+			_tara = 0;
+			return;
+		}
+		if (double.TryParse(text, System.Globalization.NumberStyles.Float,
+			System.Globalization.CultureInfo.InvariantCulture, out var val) && val >= 0)
+		{
+			_tara = val;
+		}
+		System.Diagnostics.Debug.WriteLine($"[MainPage] Tara: {_tara} kg");
 	}
 
 	private void LoadPriceList()

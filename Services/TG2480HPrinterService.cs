@@ -90,7 +90,7 @@ namespace TaroziAPP.Services
         /// <param name="weightKg">Weight in kilograms</param>
         /// <param name="dateTime">Date and time</param>
         /// <param name="address">Address</param>
-        public async Task<bool> PrintReceiptAsync(double weightKg, DateTime dateTime, string address, string carNumber = "")
+        public async Task<bool> PrintReceiptAsync(double weightKg, DateTime dateTime, string address, string carNumber = "", double tara = 0)
         {
             // Use existing connection
             if (_fd < 0)
@@ -186,12 +186,26 @@ namespace TaroziAPP.Services
                 await SendRawTextAsync("  --------------------------------\n", _fd);
                 await SendRawBytesAsync(new byte[] { 0x1B, 0x47, 0x00 }, _fd); // ESC G 0 = Double strike OFF
 
-                // Print weight - Center aligned, Large font (Double width + height) with enhanced clarity
+                // Tara (ixtiyoriy): Brutto/Tara + Netto. Netto <=0 bo'lsa raqam o'rni bo'sh qoladi
+                bool hasTara = tara > 0;
+                double netRaw = weightKg - tara;
+                string nettoNumber = netRaw > 0 ? $"{netRaw:0.###} kg" : "";
+                if (hasTara)
+                {
+                    await SendRawBytesAsync(new byte[] { 0x1B, 0x45, 0x01 }, _fd); // Bold ON
+                    await SendRawBytesAsync(new byte[] { 0x1B, 0x47, 0x01 }, _fd); // Double strike ON
+                    await SendRawTextAsync($"   Brutto: {weightKg:0.###} kg\n", _fd);
+                    await SendRawTextAsync($"   Tara:   {tara:0.###} kg\n", _fd);
+                    await SendRawBytesAsync(new byte[] { 0x1B, 0x47, 0x00 }, _fd);
+                    await SendRawBytesAsync(new byte[] { 0x1B, 0x45, 0x00 }, _fd);
+                }
+
+                // Print weight - Center aligned, Large font (tara bo'lsa Netto/yuk)
                 await SendRawBytesAsync(new byte[] { 0x1B, 0x61, 0x01 }, _fd); // Center align
                 await SendRawBytesAsync(new byte[] { 0x1B, 0x21, 0x11 }, _fd); // ESC ! 0x11 = Double width + height (11 CPI)
                 await SendRawBytesAsync(new byte[] { 0x1B, 0x45, 0x01 }, _fd); // ESC E 1 = Bold ON
                 await SendRawBytesAsync(new byte[] { 0x1B, 0x47, 0x01 }, _fd); // ESC G 1 = Double strike ON for darker text
-                await SendRawTextAsync($"Og'irlik: {weightKg:0.###} kg\n", _fd);
+                await SendRawTextAsync($"{(hasTara ? $"Netto: {nettoNumber}" : $"Og'irlik: {weightKg:0.###} kg")}\n", _fd);
                 await SendRawBytesAsync(new byte[] { 0x1B, 0x47, 0x00 }, _fd); // ESC G 0 = Double strike OFF
                 await SendRawBytesAsync(new byte[] { 0x1B, 0x45, 0x00 }, _fd); // ESC E 0 = Bold OFF
                 await SendRawBytesAsync(new byte[] { 0x1B, 0x21, 0x00 }, _fd); // ESC ! 0x00 = Normal size
