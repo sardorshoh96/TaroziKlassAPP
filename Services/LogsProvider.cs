@@ -1,101 +1,56 @@
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
 using TaroziAPP.Models;
 using Microsoft.Maui.Storage;
 
 namespace TaroziAPP.Services
 {
     /// <summary>
-    /// Provider for managing transaction logs
+    /// Sotuv loglari (hisobot uchun). 1.0.6 dan boshlab diskdagi faylda saqlanadi (<see cref="OrderLogStore"/>):
+    /// yuborilganlari o'chiriladi, yuborish paytida tushgani yo'qolmaydi, 50 MB dan oshmaydi.
+    /// 1.0.5 dan qolgan (Preferences "logs") yuborilmagan loglar birinchi ishga tushishda faylga ko'chiriladi.
     /// </summary>
     public sealed class LogsProvider
     {
-        private readonly List<Logs> _logs;
-        private const string LogsKey = "logs";
+        private const string LegacyLogsKey = "logs";
+        private readonly OrderLogStore _store;
 
         public LogsProvider()
         {
-            _logs = new List<Logs>();
-            LoadLogsAsync();
+            _store = new OrderLogStore(FileSystem.AppDataDirectory);
+            MigrateLegacyLogs();
+            System.Diagnostics.Debug.WriteLine($"[LogsProvider] yuborilmagan loglar: {_store.Count} ta ({_store.Bytes / 1024} KB)");
         }
 
-        public List<Logs> GetLogs()
+        /// <summary>Yuborilmagan loglar soni.</summary>
+        public int Count => _store.Count;
+
+        /// <summary>Eng eskisidan boshlab ko'pi bilan <paramref name="max"/> ta log (yuborish uchun).</summary>
+        public List<Logs> GetLogs(int max = int.MaxValue) => _store.Snapshot(max);
+
+        public void AddLog(Logs log) => _store.Add(log);
+
+        /// <summary>Server qabul qilgan loglarni o'chiradi (faqat shularni).</summary>
+        public void RemoveSent(IReadOnlyCollection<Logs> sent) => _store.RemoveSent(sent);
+
+        private void MigrateLegacyLogs()
         {
-            lock (_logs)
+            try
             {
-                return new List<Logs>(_logs);
+                var json = Preferences.Get(LegacyLogsKey, "");
+                if (string.IsNullOrWhiteSpace(json)) return;
+
+                var old = OrderLogStore.ParseLegacyJson(json);
+                _store.AddRange(old);
+                // Faylga yozilgandan KEYIN o'chiramiz (orada uzilsa — keyingi safar qayta ko'chiriladi,
+                // server bir xil sotuvni ikkinchi marta yozmaydi)
+                Preferences.Remove(LegacyLogsKey);
+                System.Diagnostics.Debug.WriteLine($"[LogsProvider] 1.0.5 dan {old.Count} ta yuborilmagan log faylga ko'chirildi");
             }
-        }
-
-        private async void LoadLogsAsync()
-        {
-            var storedJson = Preferences.Get(LogsKey, "");
-            if (string.IsNullOrWhiteSpace(storedJson)) return;
-
-            var logsList = JsonSerializer.Deserialize<List<JsonElement>>(storedJson);
-            if (logsList == null) return;
-
-            lock (_logs)
+            catch (System.Exception ex)
             {
-                _logs.Clear();
-                foreach (var logElement in logsList)
-                {
-                    var log = new Logs(
-                        paymentId: logElement.TryGetProperty("paymentId", out var paymentIdProp) ? paymentIdProp.GetString() : null,
-                        productId: logElement.TryGetProperty("productId", out var productIdProp) ? productIdProp.GetString() : null,
-                        time: logElement.TryGetProperty("time", out var timeProp) ? timeProp.GetInt64() : null,
-                        qty: logElement.TryGetProperty("qty", out var qtyProp) ? qtyProp.GetInt32() : null,
-                        price: logElement.TryGetProperty("price", out var priceProp) ? priceProp.GetInt32() : null,
-                        discount: logElement.TryGetProperty("discount", out var discountProp) ? discountProp.GetInt32() : null,
-                        totalPrice: logElement.TryGetProperty("totalPrice", out var totalPriceProp) ? totalPriceProp.GetInt32() : null,
-                        status: logElement.TryGetProperty("status", out var statusProp) ? statusProp.GetInt32() : null
-                    );
-                    _logs.Add(log);
-                }
+                // O'qib bo'lmadi — eski loglarni o'chirmaymiz (keyingi versiyada ham urinish mumkin)
+                System.Diagnostics.Debug.WriteLine($"[LogsProvider] eski loglarni ko'chirib bo'lmadi: {ex.Message}");
             }
-        }
-
-        private void SaveLogs()
-        {
-            List<Logs> logsCopy;
-            lock (_logs)
-            {
-                logsCopy = new List<Logs>(_logs);
-            }
-
-            var logsJson = JsonSerializer.Serialize(logsCopy.Select(log => new
-            {
-                paymentId = log.PaymentId,
-                productId = log.ProductId,
-                time = log.Time,
-                qty = log.Qty,
-                price = log.Price,
-                discount = log.Discount,
-                totalPrice = log.TotalPrice,
-                status = log.Status
-            }).ToList());
-
-            Preferences.Set(LogsKey, logsJson);
-        }
-
-        public void AddLog(Logs log)
-        {
-            lock (_logs)
-            {
-                _logs.Add(log);
-            }
-            SaveLogs();
-        }
-
-        public void ClearLogs()
-        {
-            lock (_logs)
-            {
-                _logs.Clear();
-            }
-            Preferences.Remove(LogsKey);
         }
     }
 }
-

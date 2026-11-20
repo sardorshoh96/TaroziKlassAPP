@@ -17,8 +17,8 @@
 		<ApplicationId>uz.taroziklass</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.5</ApplicationDisplayVersion>
-		<ApplicationVersion>5</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.6</ApplicationDisplayVersion>
+		<ApplicationVersion>7</ApplicationVersion>
 
 		<!-- Android specific configuration -->
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
@@ -112,6 +112,8 @@
 	<ItemGroup>
 	  <None Remove="lib\arm64-v8a\libSerialPort.so" />
 	  <None Remove="lib\arm64-v8a\libSerialPort.so.recipe" />
+	  <None Remove="lib\arm64-v8a\libCcnet.so" />
+	  <None Remove="lib\arm64-v8a\libc++_shared.so" />
 	</ItemGroup>
 
 
@@ -138,6 +140,17 @@
 		<AndroidNativeLibrary Include="lib\arm64-v8a\libSerialPort.so">
 			<Abi>arm64-v8a</Abi>
 			<Link>lib\arm64-v8a\libSerialPort.so</Link>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</AndroidNativeLibrary>
+		<!-- C100 / CCNET kupyura qabul qilgich (CoffeeKiosk'dan) -->
+		<AndroidNativeLibrary Include="lib\arm64-v8a\libCcnet.so">
+			<Abi>arm64-v8a</Abi>
+			<Link>lib\arm64-v8a\libCcnet.so</Link>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</AndroidNativeLibrary>
+		<AndroidNativeLibrary Include="lib\arm64-v8a\libc++_shared.so">
+			<Abi>arm64-v8a</Abi>
+			<Link>lib\arm64-v8a\libc++_shared.so</Link>
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</AndroidNativeLibrary>
 	</ItemGroup>

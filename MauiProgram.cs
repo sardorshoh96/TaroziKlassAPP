@@ -40,7 +40,7 @@ public static class MauiProgram
 
         var app = builder.Build();
 
-        // AppUpdateService ni ishga tushurish — har 1 soatda GitHub tekshiriladi
+        // Yangilanish: server har 2 daqiqada (majburiy yangilanish shu yerdan), GitHub har 1 soatda
         app.Services.GetRequiredService<AppUpdateService>().StartPeriodicCheck();
 
         return app;

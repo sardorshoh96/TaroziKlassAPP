@@ -23,6 +23,13 @@ namespace TaroziAPP.Services
         private bool _disposed = false;
         private Action<DeviceInfoDto>? _onDeviceRefreshed;
 
+        // Oldingi yuborish (sekin internetda 16 soniyadan uzoq) tugamaguncha yangisi boshlanmaydi —
+        // aks holda bir xil loglar ikki marta yuborilardi
+        private readonly SemaphoreSlim _sendGate = new(1, 1);
+        // Bir so'rovda ko'pi bilan shuncha log (internet uzoq yo'q bo'lib, minglab log to'plansa — bo'lib yuboriladi)
+        private const int BatchSize = 200;
+        private const int MaxBatchesPerRun = 50;
+
         public SendLogService(JsonRpcClient client, DeviceService deviceService, CredentialStorageService credentialStorage, DeviceStorageService deviceStorage, LogsProvider logsProvider)
         {
             _client = client;
@@ -30,7 +37,7 @@ namespace TaroziAPP.Services
             _credentialStorage = credentialStorage;
             _deviceStorage = deviceStorage;
             _logsProvider = logsProvider;
-            
+
             // Log yuborish timeri — har 16 soniyada
             _timer = new Timer(async _ => await SendLogsAsync(), null, TimeSpan.FromSeconds(16), TimeSpan.FromSeconds(16));
 
@@ -51,17 +58,17 @@ namespace TaroziAPP.Services
 
         private async Task SendLogsAsync()
         {
+            if (!await _sendGate.WaitAsync(0)) return;   // oldingi yuborish hali davom etmoqda
             try
             {
+                if (_logsProvider.Count == 0) return;
+
                 var credentials = await _credentialStorage.RetrieveAsync();
                 if (credentials == null)
                 {
                     System.Diagnostics.Debug.WriteLine("[SendLogService] ⚠️ Credentials topilmadi, loglar yuborilmadi");
                     return;
                 }
-
-                var logsToSend = _logsProvider.GetLogs();
-                if (logsToSend.Count == 0) return;
 
                 // Get device ID
                 var deviceInfo = await _deviceService.LoginAsync(credentials.Login, credentials.Password);
@@ -70,7 +77,7 @@ namespace TaroziAPP.Services
                     System.Diagnostics.Debug.WriteLine($"[SendLogService] ⚠️ Device info olinmadi: {deviceInfo.ErrorMessage ?? "Unknown error"}");
                     return;
                 }
-                
+
                 var deviceId = deviceInfo.Data.Id;
                 if (string.IsNullOrEmpty(deviceId))
                 {
@@ -78,33 +85,48 @@ namespace TaroziAPP.Services
                     return;
                 }
 
-                // Prepare request
-                var request = new JsonRpcRequest("OrderLogs", new
+                // Loglarni bo'lib-bo'lib yuboramiz; server qabul qilgan har bo'lak darhol o'chiriladi.
+                // Yuborish paytida yangi kupyura tushsa — u o'chirilmaydi, keyingi bo'lakda ketadi.
+                JsonElement? lastResponse = null;
+                for (int batchNo = 0; batchNo < MaxBatchesPerRun; batchNo++)
                 {
-                    deviceId,
-                    logs = logsToSend.Select(log => new
+                    var logsToSend = _logsProvider.GetLogs(BatchSize);
+                    if (logsToSend.Count == 0) break;
+
+                    var request = new JsonRpcRequest("OrderLogs", new
                     {
-                        paymentId = log.PaymentId,
-                        productId = log.ProductId,
-                        time = log.Time,
-                        qty = log.Qty,
-                        price = log.Price,
-                        discount = log.Discount,
-                        totalPrice = log.TotalPrice,
-                        status = log.Status
-                    }).ToList()
-                });
+                        deviceId,
+                        logs = logsToSend.Select(log => new
+                        {
+                            paymentId = log.PaymentId,
+                            productId = log.ProductId,
+                            time = log.Time,
+                            qty = log.Qty,
+                            price = log.Price,
+                            discount = log.Discount,
+                            totalPrice = log.TotalPrice,
+                            status = log.Status
+                        }).ToList()
+                    });
 
-                var result = await _client.PostAsync<JsonElement>(request, credentials.Login, credentials.Password);
+                    var batchResult = await _client.PostAsync<JsonElement>(request, credentials.Login, credentials.Password);
+                    if (!(batchResult.IsSuccess && batchResult.Data.ValueKind == JsonValueKind.Object))
+                    {
+                        // Yuborilmadi — loglar joyida qoladi, keyingi urinishda (16 s) qayta yuboriladi
+                        Console.WriteLine($"[SendLogService] ⚠️ OrderLogs yuborilmadi ({logsToSend.Count} ta saqlanib qoldi): {batchResult.ErrorMessage}");
+                        break;
+                    }
 
-                if (result.IsSuccess && result.Data.ValueKind == JsonValueKind.Object)
+                    _logsProvider.RemoveSent(logsToSend);
+                    lastResponse = batchResult.Data;
+                    Console.WriteLine($"[SendLogService] ✅ {logsToSend.Count} ta log yuborildi, qoldi: {_logsProvider.Count}");
+                }
+
+                if (lastResponse is JsonElement responseData)
                 {
-                    // Clear logs after successful send
-                    _logsProvider.ClearLogs();
-
                     // Check if server returns updated=1, then refresh device info (same as Flutter)
                     bool isUpdated = false;
-                    foreach (var prop in result.Data.EnumerateObject())
+                    foreach (var prop in responseData.EnumerateObject())
                     {
                         if (prop.Name.Equals("updated", StringComparison.OrdinalIgnoreCase))
                         {
@@ -145,10 +167,10 @@ namespace TaroziAPP.Services
                                 }).ToList() ?? new List<Payment>()
                             };
                             await _deviceStorage.SaveAsync(device);
-                            
+
                             // Notify that device was refreshed
                             _onDeviceRefreshed?.Invoke(refreshResult.Data);
-                            
+
                             // Mark device as updated (same as Flutter: authService.updated())
                             Console.WriteLine("[SendLogService] ℹ️ Marking device as updated (updated = 2)...");
                             await _deviceService.UpdatedAsync(credentials, refreshResult.Data.Id);
@@ -163,10 +185,6 @@ namespace TaroziAPP.Services
                         Console.WriteLine("[SendLogService] ℹ️ No update needed (updated was not 1).");
                     }
                 }
-                else
-                {
-                    Console.WriteLine($"[SendLogService] ⚠️ PostAsync failed: {result.ErrorMessage}");
-                }
             }
             catch (Exception ex)
             {
@@ -175,6 +193,10 @@ namespace TaroziAPP.Services
                 {
                     Console.WriteLine($"[SendLogService] ❌ Inner Exception: {ex.InnerException.Message}");
                 }
+            }
+            finally
+            {
+                _sendGate.Release();
             }
         }
 

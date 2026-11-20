@@ -6,9 +6,16 @@ public partial class AdvancedSettingsDialog : ContentPage
 
     public Task<AdvancedSettingsResult?> Result => _tcs.Task;
 
-    public AdvancedSettingsDialog(int currentPortMode, string currentDeviceType, string? currentPrinterType = null)
+    public AdvancedSettingsDialog(int currentPortMode, string currentDeviceType, string? currentPrinterType = null, string? currentBillAcceptor = null, bool currentTaraEnabled = true)
     {
         InitializeComponent();
+
+        // Mashina tarasi (standart: yoqilgan)
+        TaraSwitch.IsToggled = currentTaraEnabled;
+
+        // Kupyura qabul qilgich (NV10 default)
+        var billIndex = string.IsNullOrEmpty(currentBillAcceptor) ? 0 : BillAcceptorPicker.Items.IndexOf(currentBillAcceptor);
+        BillAcceptorPicker.SelectedIndex = billIndex >= 0 ? billIndex : 0;
 
         if (currentPortMode >= 0 && currentPortMode < PortModePicker.Items.Count)
         {
@@ -62,8 +69,11 @@ public partial class AdvancedSettingsDialog : ContentPage
         var portMode = PortModePicker.SelectedIndex;
         var deviceType = DeviceTypePicker.Items[DeviceTypePicker.SelectedIndex];
         var printerType = PrinterTypePicker.Items[PrinterTypePicker.SelectedIndex];
+        var billAcceptor = BillAcceptorPicker.SelectedIndex >= 0
+            ? BillAcceptorPicker.Items[BillAcceptorPicker.SelectedIndex]
+            : "NV10";
 
-        _tcs.TrySetResult(new AdvancedSettingsResult(portMode, deviceType, printerType));
+        _tcs.TrySetResult(new AdvancedSettingsResult(portMode, deviceType, printerType, billAcceptor, TaraSwitch.IsToggled));
         await Navigation.PopModalAsync();
     }
 
@@ -74,4 +84,4 @@ public partial class AdvancedSettingsDialog : ContentPage
     }
 }
 
-public readonly record struct AdvancedSettingsResult(int PortMode, string DeviceType, string PrinterType);
+public readonly record struct AdvancedSettingsResult(int PortMode, string DeviceType, string PrinterType, string BillAcceptor, bool TaraEnabled = true);

@@ -50,6 +50,7 @@ public sealed class JsonRpcClient
         using var message = new HttpRequestMessage(HttpMethod.Post, _endpoint);
         var payload = JsonSerializer.Serialize(request, SerializerOptions);
         message.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+        AppVersionHeader.AddTo(message);   // server panelida ilova versiyasi ko'rinishi uchun
 
         // Use provided credentials or saved credentials
         string authLogin = login ?? _savedLogin ?? "";

@@ -43,8 +43,9 @@ public partial class MainPage : ContentPage
 	private readonly EthernetWeightProvider? _ethernetWeightProvider;
 	// Printer service
 	private IPrinterService? _printerService;
-	// NV10 USB+ Cash Validator service
-	private  NV10Native  _nv10Validator;
+	// Kupyura qabul qilgich: NV10 (default) yoki C100 (CCNET)
+	private NV10Native? _nv10Validator;
+	private TaroziAPP.Services.Ccnet.NativeCcnet? _ccnet;
 	private List<PriceEntry> priceList = new List<PriceEntry>();
 	private const string PriceListPreferenceKey = "price_list";
 
@@ -58,7 +59,12 @@ public partial class MainPage : ContentPage
         try
 		{
             InitializeComponent();
-          
+
+            // Yangilanish faqat tarozi bo'sh paytda o'rnatiladi: pul yo'q, to'lov kutilmayapti, ustida yuk yo'q
+            // (o'rnatish ilovani qayta ishga tushiradi — mijoz puli/ishi yo'qolmasin)
+            AppUpdateService.IsIdle = () =>
+                paymentState.ShouldPay == 0 && paymentState.BankBalance == 0 && currentWeight < 20;
+
             _deviceService = deviceService;
 			_paymentService = paymentService;
 			_credentialStorage = credentialStorage;
@@ -114,17 +120,42 @@ public partial class MainPage : ContentPage
 			// Initialize printer service
 			ReloadPrinterService();
 
-			// Initialize NV10 USB+ Cash Validator service
-			try
+			// Kupyura qabul qilgich: sozlamaga qarab NV10 (default) yoki C100 (CCNET)
+			var billAcceptor = Preferences.Get("bill_acceptor", "NV10");
+			if (billAcceptor == "C100")
 			{
-				_nv10Validator = new NV10Native();
-				// Subscribe to events
-				_nv10Validator.GetType().GetEvent("BillAccepted")?.AddEventHandler(_nv10Validator, new Action<int>(OnNV10BillAccepted));
-                NV10Native.Start();
+				// C100 / CCNET (libCcnet.so) — CoffeeKiosk'dan
+				try
+				{
+					_ccnet = new TaroziAPP.Services.Ccnet.NativeCcnet();
+					_ccnet.BillStacked += OnCcnetBillStacked;
+					// Start RESET+settle+billtable (~5s) va keyin qabulni yoqish — fon oqimida (ANR bo'lmasin)
+					_ = Task.Run(async () =>
+					{
+						await _ccnet.StartAsync("/dev/ttyS4", 9600).ConfigureAwait(false);
+						_ccnet.SetAccepting(true); // tarozi doimo pul qabul qiladi
+					});
+					System.Diagnostics.Debug.WriteLine("[MainPage] C100/CCNET kupyura qabul qilgich ishga tushirildi");
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"[MainPage] CRITICAL: C100/CCNET init xatosi (libCcnet.so?): {ex.Message}");
+				}
 			}
-			catch (Exception ex)
+			else
 			{
-				System.Diagnostics.Debug.WriteLine($"[MainPage] CRITICAL: NV10 initialization error (likely libSerialPort.so missing): {ex.Message}");
+				// NV10 (default, libSerialPort.so ichida)
+				try
+				{
+					_nv10Validator = new NV10Native();
+					// Subscribe to events
+					_nv10Validator.GetType().GetEvent("BillAccepted")?.AddEventHandler(_nv10Validator, new Action<int>(OnNV10BillAccepted));
+					NV10Native.Start();
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"[MainPage] CRITICAL: NV10 initialization error (likely libSerialPort.so missing): {ex.Message}");
+				}
 			}
 
            
@@ -424,6 +455,25 @@ public partial class MainPage : ContentPage
 		});
 	}
 
+	/// <summary>Tara o'chirilgan bo'lsa maydon yashiriladi va kiritilgan qiymat tozalanadi.</summary>
+	private void ApplyTaraSetting()
+	{
+		try
+		{
+			bool enabled = Preferences.Get(SettingsPage.TaraEnabledPreferenceKey, true);
+			if (TaraSection != null) TaraSection.IsVisible = enabled;
+			if (!enabled)
+			{
+				_tara = 0;
+				if (TaraEntry != null && !string.IsNullOrEmpty(TaraEntry.Text)) TaraEntry.Text = string.Empty;
+			}
+		}
+		catch (Exception ex)
+		{
+			System.Diagnostics.Debug.WriteLine($"[MainPage] ApplyTaraSetting error: {ex.Message}");
+		}
+	}
+
 	private void OnLogAdded(Models.Logs log)
 	{
 		// Add log via SendLogService (it will add to LogsProvider internally)
@@ -492,6 +542,12 @@ public partial class MainPage : ContentPage
 		{
 			System.Diagnostics.Debug.WriteLine($"[MainPage] OnDeviceRefreshed error: {ex.Message}");
 		}
+	}
+
+	// C100 / CCNET: pul stackerga tushdi -> NV10 bilan bir xil balans mantiqi (amount = som)
+	private void OnCcnetBillStacked(object? sender, TaroziAPP.Services.Ccnet.BillStackedEventArgs e)
+	{
+		OnNV10BillAccepted((int)e.Bill.Amount);
 	}
 
 	private void OnNV10BillAccepted(int billValue)
@@ -764,8 +820,10 @@ public partial class MainPage : ContentPage
 			int paidAmount = paymentState.ShouldPay;
 			double gross = currentWeight;          // o'lchangan (brutto) og'irlik
 
-			// Tara ixtiyoriy: kiritilgan bo'lsa ishlatamiz (brutto 0/kichik bo'lsa ham)
-			double tara = _tara > 0 ? _tara : 0;
+			// Tara ixtiyoriy: kiritilgan bo'lsa ishlatamiz (brutto 0/kichik bo'lsa ham).
+			// Advanced sozlamalarda o'chirilgan bo'lsa — hisobga olinmaydi (chekda faqat og'irlik)
+			bool taraEnabled = Preferences.Get(SettingsPage.TaraEnabledPreferenceKey, true);
+			double tara = taraEnabled && _tara > 0 ? _tara : 0;
 			double net = Math.Max(0, gross - tara); // netto 0 yoki kichik bo'lsa ham chiqadi (manfiy emas)
 
 			// Chek uchun ma'lumotlarni saqlab olamiz (PrintReceipt carNumber ni tozalaydi)
@@ -1111,6 +1169,9 @@ public partial class MainPage : ContentPage
 		try
 		{
 			base.OnAppearing();
+
+			// Tara maydoni: Advanced sozlamalardagi kalitga qarab (sozlamalardan qaytganda darhol qo'llanadi)
+			ApplyTaraSetting();
 
             // Kiosk Mode Logic: Enter if enabled
             if (Preferences.Get("is_kiosk_mode", false))

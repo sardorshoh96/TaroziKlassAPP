@@ -24,6 +24,8 @@ public partial class SettingsPage : ContentPage
     private string currentAddress = "";
     private string currentDeviceType = "Standart";
     private string currentPrinterType = "USB";
+    private string currentBillAcceptor = "NV10"; // NV10 (default) yoki C100
+    private bool currentTaraEnabled = true;      // mashina tarasi maydoni (standart: yoqilgan)
     private readonly Random random = new();
     private bool isAdvancedDialogOpen;
 
@@ -32,6 +34,8 @@ public partial class SettingsPage : ContentPage
     private const string PortModePreferenceKey = "port_mode";
     private const string KioskModePreferenceKey = "is_kiosk_mode";
     private const string PrinterTypePreferenceKey = "printer_type";
+    private const string BillAcceptorPreferenceKey = "bill_acceptor";
+    public const string TaraEnabledPreferenceKey = "tara_enabled";
     private const string PriceListPreferenceKey = "price_list";
 
     public SettingsPage()
@@ -110,6 +114,8 @@ public partial class SettingsPage : ContentPage
         currentAddress = Preferences.Get(AddressPreferenceKey, "");
         currentDeviceType = Preferences.Get(DeviceTypePreferenceKey, "Standart");
         currentPrinterType = Preferences.Get(PrinterTypePreferenceKey, "USB");
+        currentBillAcceptor = Preferences.Get(BillAcceptorPreferenceKey, "NV10");
+        currentTaraEnabled = Preferences.Get(TaraEnabledPreferenceKey, true);
         portMode = Preferences.Get(PortModePreferenceKey, 0);
         isKioskMode = Preferences.Get(KioskModePreferenceKey, true);
         UpdateUI();
@@ -454,7 +460,7 @@ public partial class SettingsPage : ContentPage
 
         isAdvancedDialogOpen = true;
 
-        var dialog = new AdvancedSettingsDialog(portMode, currentDeviceType, currentPrinterType);
+        var dialog = new AdvancedSettingsDialog(portMode, currentDeviceType, currentPrinterType, currentBillAcceptor, currentTaraEnabled);
         await Navigation.PushModalAsync(dialog);
         var result = await dialog.Result;
 
@@ -464,10 +470,24 @@ public partial class SettingsPage : ContentPage
             portMode = result.Value.PortMode;
             currentDeviceType = result.Value.DeviceType;
             currentPrinterType = result.Value.PrinterType;
+            var oldBillAcceptor = currentBillAcceptor;
+            currentBillAcceptor = result.Value.BillAcceptor;
 
             Preferences.Set(PortModePreferenceKey, portMode);
             Preferences.Set(DeviceTypePreferenceKey, currentDeviceType);
             Preferences.Set(PrinterTypePreferenceKey, currentPrinterType);
+            Preferences.Set(BillAcceptorPreferenceKey, currentBillAcceptor);
+            // Tara: asosiy ekranga qaytganda (OnAppearing) darhol qo'llanadi — qayta ishga tushirish shart emas
+            currentTaraEnabled = result.Value.TaraEnabled;
+            Preferences.Set(TaraEnabledPreferenceKey, currentTaraEnabled);
+
+            // Kupyura qabul qilgich o'zgarsa — qayta ishga tushirish uchun ilovani restart qilish kerak
+            if (oldBillAcceptor != currentBillAcceptor)
+            {
+                await DisplayAlert("Kupyura qabul qilgich",
+                    $"Qabul qilgich \"{currentBillAcceptor}\" ga o'zgartirildi. O'zgarish kuchga kirishi uchun ilovani qayta ishga tushiring.",
+                    "OK");
+            }
             
             // If port mode or printer type changed, notify MainPage to reinitialize
             if (oldPortMode != portMode || result.Value.PrinterType != currentPrinterType)

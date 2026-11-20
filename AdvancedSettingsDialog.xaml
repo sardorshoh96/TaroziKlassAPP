@@ -74,6 +74,37 @@
                     </Picker>
                 </StackLayout>
 
+                <StackLayout Spacing="10">
+                    <Label Text="Kupyura qabul qilgich"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#1A237E" />
+                    <Picker x:Name="BillAcceptorPicker"
+                            Title="Kupyura qabul qilgichni tanlang">
+                        <Picker.Items>
+                            <x:String>NV10</x:String>
+                            <x:String>C100</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </StackLayout>
+
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackLayout Spacing="2" VerticalOptions="Center">
+                        <Label Text="Mashina tarasi"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="#1A237E" />
+                        <Label Text="Asosiy ekranda tara kiritish va chekda netto"
+                               FontSize="13"
+                               TextColor="#607D8B"
+                               LineBreakMode="WordWrap" />
+                    </StackLayout>
+                    <Switch x:Name="TaraSwitch"
+                            Grid.Column="1"
+                            IsToggled="True"
+                            VerticalOptions="Center" />
+                </Grid>
+
                 <Grid ColumnDefinitions="*,*"
                       ColumnSpacing="16">
                     <Button Text="Bekor qilish"
